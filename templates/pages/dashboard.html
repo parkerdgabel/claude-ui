@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Claude UI{% endblock %}
+
+{% block content %}
+<div class="px-4 py-6">
+    <!-- Header -->
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+            Dashboard
+        </h2>
+        <p class="mt-1 text-sm text-gray-500">
+            Manage your Claude Code instances and projects
+        </p>
+    </div>
+    
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        <!-- Active Instances -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-lucide="activity" class="h-6 w-6 text-gray-400"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">
+                                Active Instances
+                            </dt>
+                            <dd class="text-lg font-medium text-gray-900" id="active-instances-count">
+                                0
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Projects -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-lucide="folder" class="h-6 w-6 text-gray-400"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">
+                                Projects
+                            </dt>
+                            <dd class="text-lg font-medium text-gray-900" id="projects-count">
+                                0
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sessions Today -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-lucide="message-square" class="h-6 w-6 text-gray-400"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">
+                                Sessions Today
+                            </dt>
+                            <dd class="text-lg font-medium text-gray-900" id="sessions-today-count">
+                                0
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- MCP Servers -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-lucide="server" class="h-6 w-6 text-gray-400"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">
+                                MCP Servers
+                            </dt>
+                            <dd class="text-lg font-medium text-gray-900" id="mcp-servers-count">
+                                0
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="bg-white shadow rounded-lg p-6 mb-8">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <button class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    hx-get="/instances/new"
+                    hx-target="#modal-container">
+                <i data-lucide="plus" class="mr-2 h-4 w-4"></i>
+                New Instance
+            </button>
+            
+            <button class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                    hx-get="/projects/new"
+                    hx-target="#modal-container">
+                <i data-lucide="folder-plus" class="mr-2 h-4 w-4"></i>
+                New Project
+            </button>
+            
+            <button class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <i data-lucide="git-branch" class="mr-2 h-4 w-4"></i>
+                Create Worktree
+            </button>
+            
+            <button class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <i data-lucide="settings-2" class="mr-2 h-4 w-4"></i>
+                Configure MCP
+            </button>
+        </div>
+    </div>
+    
+    <!-- Recent Activity -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">Recent Activity</h3>
+        </div>
+        <div class="px-6 py-4">
+            <div class="text-sm text-gray-500" id="recent-activity">
+                <p>No recent activity</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Container -->
+<div id="modal-container"></div>
+
+<script>
+    // Load dashboard stats
+    async function loadDashboardStats() {
+        try {
+            // Fetch instances
+            const instancesRes = await fetch('/api/instances');
+            const instances = await instancesRes.json();
+            const activeInstances = instances.filter(i => i.status === 'active').length;
+            document.getElementById('active-instances-count').textContent = activeInstances;
+            
+            // Fetch projects
+            const projectsRes = await fetch('/api/projects');
+            const projects = await projectsRes.json();
+            document.getElementById('projects-count').textContent = projects.length;
+            
+            // Fetch MCP servers
+            const mcpRes = await fetch('/api/mcp/servers');
+            const mcpServers = await mcpRes.json();
+            document.getElementById('mcp-servers-count').textContent = mcpServers.filter(s => s.enabled).length;
+            
+            // TODO: Fetch sessions for today
+            
+        } catch (error) {
+            console.error('Failed to load dashboard stats:', error);
+        }
+    }
+    
+    // Load stats on page load
+    document.addEventListener('DOMContentLoaded', loadDashboardStats);
+    
+    // Refresh stats every 30 seconds
+    setInterval(loadDashboardStats, 30000);
+</script>
+{% endblock %}
