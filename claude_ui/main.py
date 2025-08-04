@@ -75,3 +75,10 @@ app.include_router(websocket.router, prefix="/ws", tags=["websocket"])
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy"}
+
+
+@app.get("/favicon.ico")
+async def favicon():
+    """Serve favicon"""
+    from fastapi.responses import FileResponse
+    return FileResponse("static/favicon.ico")
