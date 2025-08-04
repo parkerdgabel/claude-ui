@@ -42,3 +42,14 @@ async def mcp_page(request: Request):
         "pages/mcp.html",
         {"request": request}
     )
+
+
+@router.get("/instances/{instance_id}/chat", response_class=HTMLResponse)
+async def instance_chat_page(request: Request, instance_id: str):
+    """Render the instance chat page"""
+    # TODO: Fetch instance details from service
+    instance = {"id": instance_id, "name": "Instance", "status": "active"}
+    return templates.TemplateResponse(
+        "pages/instance_chat.html",
+        {"request": request, "instance": instance}
+    )

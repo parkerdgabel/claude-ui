@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}MCP Servers - Claude UI{% endblock %}
+
+{% block content %}
+<div class="px-4 py-6">
+    <!-- Header -->
+    <div class="mb-8 flex items-center justify-between">
+        <div>
+            <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+                MCP Servers
+            </h2>
+            <p class="mt-1 text-sm text-gray-500">
+                Configure Model Context Protocol servers
+            </p>
+        </div>
+        <div class="flex space-x-2">
+            <button class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                    onclick="exportConfig()">
+                <i data-lucide="download" class="mr-2 h-4 w-4"></i>
+                Export Config
+            </button>
+            <button class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+                    onclick="showAddServerModal()">
+                <i data-lucide="plus" class="mr-2 h-4 w-4"></i>
+                Add Server
+            </button>
+        </div>
+    </div>
+    
+    <!-- MCP Servers List -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-md">
+        <ul class="divide-y divide-gray-200" id="servers-list">
+            <!-- Servers will be loaded here -->
+            <li class="px-6 py-12 text-center">
+                <i data-lucide="server" class="mx-auto h-12 w-12 text-gray-400"></i>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">No MCP servers configured</h3>
+                <p class="mt-1 text-sm text-gray-500">Add MCP servers to extend Claude Code capabilities.</p>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    async function loadServers() {
+        try {
+            const response = await fetch('/api/mcp/servers');
+            const servers = await response.json();
+            
+            const list = document.getElementById('servers-list');
+            
+            if (servers.length === 0) {
+                return;
+            }
+            
+            list.innerHTML = servers.map(server => `
+                <li class="px-6 py-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <span class="inline-flex h-10 w-10 items-center justify-center rounded-full ${
+                                    server.enabled ? 'bg-green-100' : 'bg-gray-100'
+                                }">
+                                    <i data-lucide="server" class="h-5 w-5 ${
+                                        server.enabled ? 'text-green-600' : 'text-gray-600'
+                                    }"></i>
+                                </span>
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">
+                                    ${server.name}
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    Type: ${server.type}
+                                    ${server.type === 'stdio' ? ' • Command: ' + server.command : ''}
+                                    ${server.type !== 'stdio' ? ' • URL: ' + server.url : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="toggleServer('${server.id}')" 
+                                    class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                                        server.enabled ? 'bg-indigo-600' : 'bg-gray-200'
+                                    }">
+                                <span class="translate-x-0 inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                                    server.enabled ? 'translate-x-5' : 'translate-x-0'
+                                }"></span>
+                            </button>
+                            <button onclick="editServer('${server.id}')" 
+                                    class="text-indigo-600 hover:text-indigo-900">
+                                Edit
+                            </button>
+                            <button onclick="deleteServer('${server.id}')" 
+                                    class="text-red-600 hover:text-red-900">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </li>
+            `).join('');
+            
+            lucide.createIcons();
+            
+        } catch (error) {
+            console.error('Failed to load servers:', error);
+        }
+    }
+    
+    function showAddServerModal() {
+        // TODO: Implement modal
+        alert('Add server modal not implemented yet');
+    }
+    
+    async function toggleServer(serverId) {
+        try {
+            const response = await fetch(`/api/mcp/servers/${serverId}/toggle`, {
+                method: 'POST'
+            });
+            
+            if (response.ok) {
+                loadServers();
+            }
+        } catch (error) {
+            console.error('Failed to toggle server:', error);
+        }
+    }
+    
+    function editServer(serverId) {
+        // TODO: Implement edit
+        alert('Edit server not implemented yet');
+    }
+    
+    async function deleteServer(serverId) {
+        if (!confirm('Are you sure you want to delete this MCP server?')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/mcp/servers/${serverId}`, {
+                method: 'DELETE'
+            });
+            
+            if (response.ok) {
+                loadServers();
+            }
+        } catch (error) {
+            console.error('Failed to delete server:', error);
+        }
+    }
+    
+    async function exportConfig() {
+        try {
+            const response = await fetch('/api/mcp/servers/export');
+            const config = await response.json();
+            
+            // Download as JSON file
+            const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '.mcp.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Failed to export config:', error);
+        }
+    }
+    
+    // Load servers on page load
+    document.addEventListener('DOMContentLoaded', loadServers);
+</script>
+{% endblock %}

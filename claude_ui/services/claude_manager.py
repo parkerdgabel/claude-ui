@@ -6,8 +6,7 @@ import uuid
 from datetime import datetime
 from typing import Dict, Optional, Any, AsyncIterator
 
-from claude_code_sdk import query, ClaudeCodeOptions, Message
-from claude_code_sdk.messages import AssistantMessage, TextBlock
+from claude_code_sdk import query, ClaudeCodeOptions, Message, AssistantMessage, TextBlock
 
 from claude_ui.config import settings
 from claude_ui.models.database import Instance, Session, Message as DBMessage

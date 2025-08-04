@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Projects - Claude UI{% endblock %}
+
+{% block content %}
+<div class="px-4 py-6">
+    <!-- Header -->
+    <div class="mb-8 flex items-center justify-between">
+        <div>
+            <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+                Projects
+            </h2>
+            <p class="mt-1 text-sm text-gray-500">
+                Manage your development projects
+            </p>
+        </div>
+        <button class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+                onclick="showCreateProjectModal()">
+            <i data-lucide="folder-plus" class="mr-2 h-4 w-4"></i>
+            New Project
+        </button>
+    </div>
+    
+    <!-- Projects Grid -->
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3" id="projects-grid">
+        <!-- Projects will be loaded here -->
+        <div class="text-center col-span-full py-12">
+            <i data-lucide="folder" class="mx-auto h-12 w-12 text-gray-400"></i>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No projects</h3>
+            <p class="mt-1 text-sm text-gray-500">Get started by creating a new project.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function loadProjects() {
+        try {
+            const response = await fetch('/api/projects');
+            const projects = await response.json();
+            
+            const grid = document.getElementById('projects-grid');
+            
+            if (projects.length === 0) {
+                return;
+            }
+            
+            grid.innerHTML = projects.map(project => `
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i data-lucide="folder" class="h-6 w-6 text-gray-400"></i>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <a href="/projects/${project.id}" class="text-sm font-medium text-gray-900 hover:text-indigo-600">
+                                    ${project.name}
+                                </a>
+                                <p class="text-xs text-gray-500 truncate">
+                                    ${project.path}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <p class="text-sm text-gray-600">
+                                ${project.description || 'No description'}
+                            </p>
+                        </div>
+                        <div class="mt-4 flex space-x-2">
+                            <button class="text-xs text-indigo-600 hover:text-indigo-500">
+                                Open
+                            </button>
+                            <button class="text-xs text-gray-600 hover:text-gray-500">
+                                Worktrees
+                            </button>
+                            <button class="text-xs text-gray-600 hover:text-gray-500">
+                                Settings
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            lucide.createIcons();
+            
+        } catch (error) {
+            console.error('Failed to load projects:', error);
+        }
+    }
+    
+    function showCreateProjectModal() {
+        // TODO: Implement modal
+        alert('Create project modal not implemented yet');
+    }
+    
+    // Load projects on page load
+    document.addEventListener('DOMContentLoaded', loadProjects);
+</script>
+{% endblock %}
