@@ -2,15 +2,12 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
 from claude_ui.core.database import get_db
-from claude_ui.models.database import Worktree, Project
 from claude_ui.models.schemas import WorktreeCreate, WorktreeResponse
-from claude_ui.services.git_manager import GitManager
+from claude_ui.services.worktree_service import worktree_service
 
 router = APIRouter()
-git_manager = GitManager()
 
 
 @router.post("/", response_model=WorktreeResponse)
@@ -19,21 +16,8 @@ async def create_worktree(
     db: AsyncSession = Depends(get_db),
 ):
     """Create a new git worktree"""
-    # Get project
-    project = await db.get(Project, worktree_data.project_id)
-    if not project:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Project not found",
-        )
-    
     try:
-        # Create worktree
-        worktree = await git_manager.create_worktree(
-            project=project,
-            branch_name=worktree_data.branch,
-            worktree_name=worktree_data.name,
-        )
+        worktree = await worktree_service.create_worktree(worktree_data, db)
         return worktree
     except ValueError as e:
         raise HTTPException(
@@ -48,12 +32,7 @@ async def list_worktrees(
     db: AsyncSession = Depends(get_db),
 ):
     """List all worktrees, optionally filtered by project"""
-    query = select(Worktree)
-    if project_id:
-        query = query.where(Worktree.project_id == project_id)
-    
-    result = await db.execute(query)
-    worktrees = result.scalars().all()
+    worktrees = await worktree_service.list_worktrees(db, project_id)
     return worktrees
 
 
@@ -63,7 +42,7 @@ async def get_worktree(
     db: AsyncSession = Depends(get_db),
 ):
     """Get a specific worktree"""
-    worktree = await db.get(Worktree, worktree_id)
+    worktree = await worktree_service.get_worktree(worktree_id, db)
     if not worktree:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -78,15 +57,13 @@ async def delete_worktree(
     db: AsyncSession = Depends(get_db),
 ):
     """Remove a git worktree"""
-    worktree = await db.get(Worktree, worktree_id)
-    if not worktree:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Worktree not found",
-        )
-    
     try:
-        await git_manager.remove_worktree(worktree)
+        success = await worktree_service.delete_worktree(worktree_id, db)
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Worktree not found",
+            )
         return {"message": "Worktree removed successfully"}
     except ValueError as e:
         raise HTTPException(
@@ -101,12 +78,11 @@ async def get_worktree_status(
     db: AsyncSession = Depends(get_db),
 ):
     """Get git status for a worktree"""
-    worktree = await db.get(Worktree, worktree_id)
-    if not worktree:
+    try:
+        status = await worktree_service.get_worktree_status(worktree_id, db)
+        return status
+    except ValueError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Worktree not found",
         )
-    
-    status = await git_manager.get_git_status(worktree.path)
-    return status
