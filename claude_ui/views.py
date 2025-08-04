@@ -44,6 +44,24 @@ async def mcp_page(request: Request):
     )
 
 
+@router.get("/instances/new", response_class=HTMLResponse)
+async def new_instance_form(request: Request):
+    """Render the new instance form"""
+    return templates.TemplateResponse(
+        "forms/new_instance.html",
+        {"request": request}
+    )
+
+
+@router.get("/projects/new", response_class=HTMLResponse)
+async def new_project_form(request: Request):
+    """Render the new project form"""
+    return templates.TemplateResponse(
+        "forms/new_project.html",
+        {"request": request}
+    )
+
+
 @router.get("/instances/{instance_id}/chat", response_class=HTMLResponse)
 async def instance_chat_page(request: Request, instance_id: str):
     """Render the instance chat page"""
